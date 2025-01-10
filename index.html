@@ -1,14 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>P5.js Face</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-    <script src="script.js"></script>
-  </head>
-  <body>
-    <main></main>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Top-Down Shooter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+</head>
+<body>
+  <script>
+    let player;
+    let bullets = [];
+    let targets = [];
+
+    function setup() {
+      createCanvas(800, 600);
+      player = new Player();
+
+      // Create random targets
+      for (let i = 0; i < 5; i++) {
+        targets.push(new Target(random(width), random(height / 2)));
+      }
+    }
+
+    function draw() {
+      background(30);
+
+      // Update and display player
+      player.update();
+      player.display();
+
+      // Update and display bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].update();
+        bullets[i].display();
+
+        // Remove bullets off-screen
+        if (bullets[i].offscreen()) {
+          bullets.splice(i, 1);
+        }
+      }
+
+      // Update and display targets
+      for (let i = targets.length - 1; i >= 0; i--) {
+        targets[i].display();
+
+        // Check for bullet collision
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          if (targets[i].hit(bullets[j])) {
+            targets.splice(i, 1);
+            bullets.splice(j, 1);
+            break;
+          }
+        }
+      }
+
+      // Game over condition
+      if (targets.length === 0) {
+        fill(255);
+        textAlign(CENTER, CENTER);
+        textSize(32);
+        text("You Win!", width / 2, height / 2);
+        noLoop();
+      }
+    }
+
+    function keyPressed() {
+      if (keyCode === 32) {
+        bullets.push(new Bullet(player.x, player.y));
+      }
+    }
+
+    class Player {
+      constructor() {
+        this.x = width / 2;
+        this.y = height - 50;
+        this.size = 30;
+        this.speed = 5;
+      }
+
+      update() {
+        if (keyIsDown(LEFT_ARROW) && this.x > 0) {
+          this.x -= this.speed;
+        }
+        if (keyIsDown(RIGHT_ARROW) && this.x < width) {
+          this.x += this.speed;
+        }
+        if (keyIsDown(UP_ARROW) && this.y > 0) {
+          this.y -= this.speed;
+        }
+        if (keyIsDown(DOWN_ARROW) && this.y < height) {
+          this.y += this.speed;
+        }
+      }
+
+      display() {
+        fill(0, 255, 0);
+        rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+      }
+    }
+
+    class Bullet {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 10;
+        this.speed = 7;
+      }
+
+      update() {
+        this.y -= this.speed;
+      }
+
+      display() {
+        fill(255, 255, 0);
+        ellipse(this.x, this.y, this.size);
+      }
+
+      offscreen() {
+        return this.y < 0;
+      }
+    }
+
+    class Target {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 40;
+      }
+
+      display() {
+        fill(255, 0, 0);
+        ellipse(this.x, this.y, this.size);
+      }
+
+      hit(bullet) {
+        let distance = dist(this.x, this.y, bullet.x, bullet.y);
+        return distance < this.size / 2 + bullet.size / 2;
+      }
+    }
+  </script>
+</body>
 </html>
